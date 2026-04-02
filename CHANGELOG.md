@@ -7,7 +7,8 @@ All notable changes to this repository will be documented here once tagged relea
 - Initialize repository skeleton based on the runseal-style governance, docs, CI, and release layout.
 - Add Bash and PowerShell validation/release helper entrypoints.
 - Keep the command layer intentionally minimal until product logic is requested.
+- Fix release publish job checkout and promote the first public stable release to 0.1.1.
 
-## 0.1.0
+## 0.1.1
 
 - Initial public stable skeleton.
