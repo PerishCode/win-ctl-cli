@@ -11,6 +11,15 @@ No Magic. Thin Core. Explicit Helpers.
 - Choose clear lifecycle verbs over abstract method layers.
 - Keep `win-ctl-cli` as a repository skeleton unless a task explicitly asks for product logic.
 
+## Product Constraints
+
+- No resident or background app.
+- Keep every action simple, clear, traceable, and cleanly removable with no harmful residue.
+- Default to stateless behavior; write any required state to disk explicitly.
+- Prefer one-shot CLI commands over daemons, RPC, or session-based control.
+- Expand capability boundaries only in response to actual needs; keep default output minimal, with richer detail enabled explicitly via flags or parameters.
+- Avoid implicit orchestration.
+
 ## Directory Conventions
 
 - `app/src/bin/win-ctl-cli.rs`: CLI entrypoint.
@@ -69,6 +78,7 @@ No Magic. Thin Core. Explicit Helpers.
    - `cargo fmt --check`
    - `cargo test`
    - `pnpm run docs:build`
+   - Run `cargo` commands one at a time in this workspace; parallel `cargo` runs contend on Cargo artifact locks and can block each other.
 4. Keep `README.md` focused on user-facing usage and repository navigation.
 5. Before merging to `main`, ensure `.task/` is cleaned up.
 
