@@ -1,0 +1,15 @@
+{
+  "name": "win-ctl-cli-workspace",
+  "private": true,
+  "scripts": {
+    "docs:dev": "pnpm --filter win-ctl-cli-docs dev",
+    "docs:build": "pnpm --filter win-ctl-cli-docs build",
+    "docs:preview": "pnpm --filter win-ctl-cli-docs preview"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
