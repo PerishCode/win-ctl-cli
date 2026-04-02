@@ -3,7 +3,7 @@
 Use the release install script when a tagged release exists:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.sh | sh -s -- --version v0.1.2
+curl -fsSL https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.sh | sh -s -- --version v0.1.3
 ```
 
 For local development:
