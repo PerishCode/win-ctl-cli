@@ -7,3 +7,11 @@ repository = "https://github.com/PerishCode/win-ctl-cli"
 description = "Repository skeleton for a Windows control CLI"
 
 [dependencies]
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_Graphics_Gdi"] }
+
+[target.'cfg(windows)'.dependencies.image]
+version = "0.25"
+default-features = false
+features = ["bmp", "png"]
