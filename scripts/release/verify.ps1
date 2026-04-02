@@ -8,6 +8,8 @@ try {
   pnpm install --frozen-lockfile
   cargo fmt --check
   cargo test --locked
+  if (Test-Path -LiteralPath (Join-Path $repoDir 'docs/.vitepress/cache')) { Remove-Item -Recurse -Force (Join-Path $repoDir 'docs/.vitepress/cache') }
+  if (Test-Path -LiteralPath (Join-Path $repoDir 'docs/.vitepress/dist')) { Remove-Item -Recurse -Force (Join-Path $repoDir 'docs/.vitepress/dist') }
   pnpm run docs:build
   & pwsh -File (Join-Path $repoDir 'scripts\docs\links.ps1')
   & pwsh -File (Join-Path $repoDir 'scripts\docs\alignment.ps1')

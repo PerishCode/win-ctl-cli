@@ -4,7 +4,7 @@ Seal the control surface.
 
 一个用于 Windows 控制类 CLI 的可复用仓库骨架，包含明确的文档、发布和治理流程。
 
-当前公开发布线为 `0.1.0-beta.0`，下面的安装和更新示例都显式固定到这个 beta tag。
+当前公开发布线为 `0.1.0`，下面的安装和更新示例都显式固定到这个稳定 tag。
 
 English canonical README: [README.md](README.md).
 
@@ -18,7 +18,7 @@ Unix-like shell：
 
 ```bash
 # 1) 安装当前 beta
-curl -fsSL https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.sh | sh -s -- --version v0.1.0-beta.0
+curl -fsSL https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.sh | sh -s -- --version v0.1.0
 
 # 2) 验证二进制已可用
 win-ctl-cli --version
@@ -31,7 +31,7 @@ PowerShell 7：
 
 ```powershell
 # 1) 安装当前 beta
-irm https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.ps1 | pwsh -Command - --version v0.1.0-beta.0
+irm https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.ps1 | pwsh -Command - --version v0.1.0
 
 # 2) 验证二进制已可用
 win-ctl-cli --version
@@ -43,7 +43,7 @@ win-ctl-cli
 期望输出：
 
 ```text
-win-ctl-cli 0.1.0-beta.0
+win-ctl-cli 0.1.0
 win-ctl-cli: repository skeleton
 ```
 
@@ -84,8 +84,8 @@ win-ctl-cli
 win-ctl-cli --version
 
 # 显式检查并安装当前 beta
-win-ctl-cli self-update --check --version v0.1.0-beta.0
-win-ctl-cli self-update --version v0.1.0-beta.0
+win-ctl-cli self-update --check --version v0.1.0
+win-ctl-cli self-update --version v0.1.0
 ```
 
 ## 文档
@@ -110,7 +110,7 @@ bash scripts/docs/links.sh
 bash scripts/docs/alignment.sh
 bash scripts/docs/agent-meta.sh
 bash scripts/docs/agent-routes.sh
-bash scripts/release/smoke.sh --version v0.1.0-beta.0
+bash scripts/release/smoke.sh --version v0.1.0
 ```
 
 PowerShell 7：
@@ -123,7 +123,7 @@ pwsh -File scripts/docs/links.ps1
 pwsh -File scripts/docs/alignment.ps1
 pwsh -File scripts/docs/agent-meta.ps1
 pwsh -File scripts/docs/agent-routes.ps1
-pwsh -File scripts/release/smoke.ps1 --version v0.1.0-beta.0
+pwsh -File scripts/release/smoke.ps1 --version v0.1.0
 ```
 
 ## 故障排查（快速定位）

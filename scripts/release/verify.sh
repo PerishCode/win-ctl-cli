@@ -7,6 +7,7 @@ cd "$REPO_DIR"
 pnpm install --frozen-lockfile
 cargo fmt --check
 cargo test --locked
+rm -rf docs/.vitepress/cache docs/.vitepress/dist
 pnpm run docs:build
 bash scripts/docs/links.sh
 bash scripts/docs/alignment.sh
