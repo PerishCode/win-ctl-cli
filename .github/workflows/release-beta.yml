@@ -164,6 +164,49 @@ jobs:
             dist/*.tar.gz
             dist/checksums.txt
 
+  build-windows:
+    needs:
+      - validate-version
+      - validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binaries
+        env:
+          VERSION: ${{ needs.validate-version.outputs.version }}
+          TARGET: ${{ matrix.target }}
+        run: pwsh -File scripts/release/package.ps1 "$env:VERSION" "$env:TARGET" $env:TOOLS
+
+      - name: Compute checksums
+        run: pwsh -File scripts/release/checksum.ps1 dist/checksums.txt dist/*.tar.gz
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-beta-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/checksums.txt
+
   package-skill:
     needs:
       - validate-version
@@ -199,6 +242,7 @@ jobs:
       - validate
       - build-linux
       - build-darwin
+      - build-windows
       - package-skill
     runs-on: ubuntu-latest
     defaults:

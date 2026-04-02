@@ -4,7 +4,7 @@ Seal the control surface.
 
 Deterministic repository skeleton for a Windows control CLI with explicit docs, release, and governance flows.
 
-Current public launch line: `0.1.1`. Stable install and update examples below pin that tag explicitly.
+Current public launch line: `0.1.2`. Stable install and update examples below pin that tag explicitly.
 
 Chinese docs entrypoint: [README.zh-CN.md](README.zh-CN.md).
 
@@ -18,7 +18,7 @@ Unix-like shell:
 
 ```bash
 # 1) install the current beta
-curl -fsSL https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.sh | sh -s -- --version v0.1.1
+curl -fsSL https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.sh | sh -s -- --version v0.1.2
 
 # 2) verify the binary is reachable
 win-ctl-cli --version
@@ -31,7 +31,7 @@ PowerShell 7:
 
 ```powershell
 # 1) install the current beta
-irm https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.ps1 | pwsh -Command - --version v0.1.1
+irm https://raw.githubusercontent.com/PerishCode/win-ctl-cli/main/scripts/manage/install.ps1 | pwsh -Command - --version v0.1.2
 
 # 2) verify the binary is reachable
 win-ctl-cli --version
@@ -43,7 +43,7 @@ win-ctl-cli
 Expected output:
 
 ```text
-win-ctl-cli 0.1.1
+win-ctl-cli 0.1.2
 win-ctl-cli: repository skeleton
 ```
 
@@ -84,8 +84,8 @@ win-ctl-cli
 win-ctl-cli --version
 
 # check and install the current beta explicitly
-win-ctl-cli self-update --check --version v0.1.1
-win-ctl-cli self-update --version v0.1.1
+win-ctl-cli self-update --check --version v0.1.2
+win-ctl-cli self-update --version v0.1.2
 ```
 
 ## Docs
@@ -110,7 +110,7 @@ bash scripts/docs/links.sh
 bash scripts/docs/alignment.sh
 bash scripts/docs/agent-meta.sh
 bash scripts/docs/agent-routes.sh
-bash scripts/release/smoke.sh --version v0.1.1
+bash scripts/release/smoke.sh --version v0.1.2
 ```
 
 PowerShell 7:
@@ -123,7 +123,7 @@ pwsh -File scripts/docs/links.ps1
 pwsh -File scripts/docs/alignment.ps1
 pwsh -File scripts/docs/agent-meta.ps1
 pwsh -File scripts/docs/agent-routes.ps1
-pwsh -File scripts/release/smoke.ps1 --version v0.1.1
+pwsh -File scripts/release/smoke.ps1 --version v0.1.2
 ```
 
 ## Troubleshooting Fast Path
