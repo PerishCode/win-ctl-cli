@@ -1,34 +1,93 @@
 use std::path::Path;
 
-#[cfg(windows)]
-pub fn capture(output_path: &Path) -> Result<(), String> {
-    capture_windows(output_path, None)
+use crate::core::RuntimeConfig;
+
+pub fn capture(_runtime: &RuntimeConfig, output_path: &Path) -> Result<(), String> {
+    capture_windows(output_path, None, CaptureSource::Screen)
+}
+
+pub fn capture_with_format(
+    _runtime: &RuntimeConfig,
+    output_path: &Path,
+    format: &str,
+) -> Result<(), String> {
+    capture_windows(output_path, Some(format), CaptureSource::Screen)
+}
+
+pub fn capture_active(_runtime: &RuntimeConfig, output_path: &Path) -> Result<(), String> {
+    capture_windows(output_path, None, CaptureSource::ActiveWindow)
+}
+
+pub fn capture_active_with_format(
+    _runtime: &RuntimeConfig,
+    output_path: &Path,
+    format: &str,
+) -> Result<(), String> {
+    capture_windows(output_path, Some(format), CaptureSource::ActiveWindow)
+}
+
+pub fn capture_window(
+    _runtime: &RuntimeConfig,
+    output_path: &Path,
+    hwnd: isize,
+) -> Result<(), String> {
+    capture_windows(output_path, None, CaptureSource::Window(hwnd))
+}
+
+pub fn capture_target_active(
+    runtime: &RuntimeConfig,
+    output_path: &Path,
+    format: Option<&str>,
+) -> Result<(), String> {
+    match format {
+        Some(format) => capture_active_with_format(runtime, output_path, format),
+        None => capture_active(runtime, output_path),
+    }
+}
+
+pub fn capture_target_window(
+    runtime: &RuntimeConfig,
+    output_path: &Path,
+    hwnd: isize,
+    format: Option<&str>,
+) -> Result<(), String> {
+    match format {
+        Some(format) => capture_window_with_format(runtime, output_path, hwnd, format),
+        None => capture_window(runtime, output_path, hwnd),
+    }
+}
+
+pub fn capture_window_with_format(
+    _runtime: &RuntimeConfig,
+    output_path: &Path,
+    hwnd: isize,
+    format: &str,
+) -> Result<(), String> {
+    capture_windows(output_path, Some(format), CaptureSource::Window(hwnd))
+}
+
+enum CaptureSource {
+    Screen,
+    ActiveWindow,
+    Window(isize),
 }
 
 #[cfg(windows)]
-pub fn capture_with_format(output_path: &Path, format: &str) -> Result<(), String> {
-    capture_windows(output_path, Some(format))
-}
-
-#[cfg(not(windows))]
-pub fn capture(_output_path: &Path) -> Result<(), String> {
-    Err(String::from("screen capture is only supported on Windows"))
-}
-
-#[cfg(not(windows))]
-pub fn capture_with_format(_output_path: &Path, _format: &str) -> Result<(), String> {
-    Err(String::from("screen capture is only supported on Windows"))
-}
-
-#[cfg(windows)]
-fn capture_windows(output_path: &Path, format_override: Option<&str>) -> Result<(), String> {
+fn capture_windows(
+    output_path: &Path,
+    format_override: Option<&str>,
+    source: CaptureSource,
+) -> Result<(), String> {
     use image::{ImageBuffer, ImageFormat, Rgba};
     use std::os::windows::ffi::OsStrExt;
-    use windows_sys::Win32::Foundation::HWND;
+    use windows_sys::Win32::Foundation::{HWND, RECT};
     use windows_sys::Win32::Graphics::Gdi::{
         BI_RGB, BITMAPINFO, BITMAPINFOHEADER, BitBlt, CreateCompatibleBitmap, CreateCompatibleDC,
         DIB_RGB_COLORS, DeleteDC, DeleteObject, GetDC, GetDIBits, GetDeviceCaps, HBITMAP, HGDIOBJ,
         HORZRES, ReleaseDC, SRCCOPY, SelectObject, VERTRES,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetForegroundWindow, GetWindowRect, IsIconic,
     };
 
     let output_wide: Vec<u16> = output_path
@@ -45,29 +104,108 @@ fn capture_windows(output_path: &Path, format_override: Option<&str>) -> Result<
         None => format_from_path(output_path)?,
     };
 
-    let screen_dc = unsafe { GetDC(0 as HWND) };
-    if screen_dc.is_null() {
-        return Err(String::from("failed to access screen"));
-    }
+    let (capture_dc, release_hwnd, width, height, origin_x, origin_y) = match source {
+        CaptureSource::Screen => {
+            let screen_dc = unsafe { GetDC(0 as HWND) };
+            if screen_dc.is_null() {
+                return Err(String::from("failed to access screen"));
+            }
 
-    let width = unsafe { GetDeviceCaps(screen_dc, HORZRES as i32) };
-    let height = unsafe { GetDeviceCaps(screen_dc, VERTRES as i32) };
-    if width <= 0 || height <= 0 {
-        unsafe { ReleaseDC(0 as HWND, screen_dc) };
-        return Err(String::from("failed to read screen size"));
-    }
+            let width = unsafe { GetDeviceCaps(screen_dc, HORZRES as i32) };
+            let height = unsafe { GetDeviceCaps(screen_dc, VERTRES as i32) };
+            if width <= 0 || height <= 0 {
+                unsafe { ReleaseDC(0 as HWND, screen_dc) };
+                return Err(String::from("failed to read screen size"));
+            }
 
-    let mem_dc = unsafe { CreateCompatibleDC(screen_dc) };
+            (screen_dc, 0 as HWND, width, height, 0, 0)
+        }
+        CaptureSource::ActiveWindow => {
+            let hwnd = unsafe { GetForegroundWindow() };
+            if hwnd.is_null() {
+                return Err(String::from("no active window is available"));
+            }
+            if unsafe { IsIconic(hwnd) } != 0 {
+                return Err(String::from(
+                    "active window is minimized and cannot be captured",
+                ));
+            }
+
+            let mut rect = RECT {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+            };
+            if unsafe { GetWindowRect(hwnd, &mut rect) } == 0 {
+                return Err(String::from("failed to read active window bounds"));
+            }
+            let width = rect.right - rect.left;
+            let height = rect.bottom - rect.top;
+            if width <= 0 || height <= 0 {
+                return Err(String::from(
+                    "active window has no usable bounds for capture",
+                ));
+            }
+
+            let screen_dc = unsafe { GetDC(0 as HWND) };
+            if screen_dc.is_null() {
+                return Err(String::from("failed to access screen"));
+            }
+
+            (screen_dc, 0 as HWND, width, height, rect.left, rect.top)
+        }
+        CaptureSource::Window(hwnd) => {
+            let hwnd = hwnd as HWND;
+            if hwnd.is_null() {
+                return Err(String::from("window handle is required"));
+            }
+
+            let mut rect = RECT {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+            };
+            if unsafe { GetWindowRect(hwnd, &mut rect) } == 0 {
+                return Err(String::from("failed to read window bounds"));
+            }
+            let width = rect.right - rect.left;
+            let height = rect.bottom - rect.top;
+            if width <= 0 || height <= 0 {
+                return Err(String::from("window has no usable bounds for capture"));
+            }
+
+            let screen_dc = unsafe { GetDC(0 as HWND) };
+            if screen_dc.is_null() {
+                return Err(String::from("failed to access screen"));
+            }
+
+            (screen_dc, 0 as HWND, width, height, rect.left, rect.top)
+        }
+    };
+
+    let mem_dc = unsafe { CreateCompatibleDC(capture_dc) };
     if mem_dc.is_null() {
-        unsafe { ReleaseDC(0 as HWND, screen_dc) };
+        unsafe {
+            if release_hwnd.is_null() {
+                ReleaseDC(0 as HWND, capture_dc)
+            } else {
+                ReleaseDC(release_hwnd, capture_dc)
+            }
+        };
         return Err(String::from("failed to create memory device context"));
     }
 
-    let bitmap = unsafe { CreateCompatibleBitmap(screen_dc, width, height) };
+    let bitmap = unsafe { CreateCompatibleBitmap(capture_dc, width, height) };
     if bitmap.is_null() {
         unsafe {
             DeleteDC(mem_dc);
-            ReleaseDC(0 as HWND, screen_dc);
+            if release_hwnd.is_null() {
+                ReleaseDC(0 as HWND, capture_dc);
+            } else {
+                ReleaseDC(release_hwnd, capture_dc);
+            }
         }
         return Err(String::from("failed to create bitmap"));
     }
@@ -77,18 +215,30 @@ fn capture_windows(output_path: &Path, format_override: Option<&str>) -> Result<
         unsafe {
             DeleteObject(bitmap as HGDIOBJ);
             DeleteDC(mem_dc);
-            ReleaseDC(0 as HWND, screen_dc);
+            if release_hwnd.is_null() {
+                ReleaseDC(0 as HWND, capture_dc);
+            } else {
+                ReleaseDC(release_hwnd, capture_dc);
+            }
         }
         return Err(String::from("failed to select bitmap"));
     }
 
-    let blt_ok = unsafe { BitBlt(mem_dc, 0, 0, width, height, screen_dc, 0, 0, SRCCOPY) };
+    let blt_ok = unsafe {
+        BitBlt(
+            mem_dc, 0, 0, width, height, capture_dc, origin_x, origin_y, SRCCOPY,
+        )
+    };
     if blt_ok == 0 {
         unsafe {
             SelectObject(mem_dc, old_object);
             DeleteObject(bitmap as HGDIOBJ);
             DeleteDC(mem_dc);
-            ReleaseDC(0 as HWND, screen_dc);
+            if release_hwnd.is_null() {
+                ReleaseDC(0 as HWND, capture_dc);
+            } else {
+                ReleaseDC(release_hwnd, capture_dc);
+            }
         }
         return Err(String::from("failed to copy screen pixels"));
     }
@@ -133,7 +283,11 @@ fn capture_windows(output_path: &Path, format_override: Option<&str>) -> Result<
             SelectObject(mem_dc, old_object);
             DeleteObject(bitmap as HGDIOBJ);
             DeleteDC(mem_dc);
-            ReleaseDC(0 as HWND, screen_dc);
+            if release_hwnd.is_null() {
+                ReleaseDC(0 as HWND, capture_dc);
+            } else {
+                ReleaseDC(release_hwnd, capture_dc);
+            }
         }
         return Err(String::from("failed to read bitmap data"));
     }
@@ -155,7 +309,11 @@ fn capture_windows(output_path: &Path, format_override: Option<&str>) -> Result<
         SelectObject(mem_dc, old_object);
         DeleteObject(bitmap as HGDIOBJ);
         DeleteDC(mem_dc);
-        ReleaseDC(0 as HWND, screen_dc);
+        if release_hwnd.is_null() {
+            ReleaseDC(0 as HWND, capture_dc);
+        } else {
+            ReleaseDC(release_hwnd, capture_dc);
+        }
     }
 
     write_result.map_err(|err| err.to_string())?;
