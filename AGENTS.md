@@ -82,6 +82,23 @@ No Magic. Thin Core. Explicit Helpers.
 4. Keep `README.md` focused on user-facing usage and repository navigation.
 5. Before merging to `main`, ensure `.task/` is cleaned up.
 
+## Branch Management Workflow
+
+1. Start new work from an up-to-date local `main` that matches `origin/main`.
+2. Create a dedicated feature branch for the task before editing files.
+3. Keep work on that branch until the task is validated and ready for review.
+4. Commit on the feature branch with small, focused commits; do not develop directly on `main`.
+5. Open a PR from the feature branch into `main`.
+6. Prefer squash merge so `main` receives one clean, reviewable change per task.
+7. After merge, realign local `main` to `origin/main` before starting the next task.
+8. Delete merged feature branches after they are no longer needed.
+
+### Recovery Rules
+
+- If work accidentally lands on local `main`, move it onto a feature branch before opening a PR.
+- Do not force-push or rewrite shared branch history unless a human explicitly requests it.
+- If local `main` diverges from `origin/main` after a squash merge, prefer creating a safety backup branch and then realigning local `main` to `origin/main`.
+
 ## Commit and Merge Rules
 
 - Prefer small, focused commits with clear messages.
